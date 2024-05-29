@@ -1,0 +1,6 @@
+student	student	student@
+123	123	123
+name	password	email@
+maisha	maishaa	1234
+nabil	nabil	nabil@
+maisha	maishaa	1234
