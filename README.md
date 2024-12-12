@@ -21,4 +21,4 @@ This user-friendly system helps librarians efficiently manage book records and p
 * Social Media - 
 [Facebook](https://www.facebook.com/nabil.adib.1412)
 * Click here to Download - 
-[Download](https://drive.google.com/uc?export=1sN9sKLIZ-mHPZhBG6GrahdYiVFHImEdB)
+[Download](https://drive.google.com/drive/folders/1sN9sKLIZ-mHPZhBG6GrahdYiVFHImEdB?usp=drive_link)
