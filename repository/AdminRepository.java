@@ -1,273 +1,274 @@
 package repository;
 import entity.*;
-import java.io.*;
-
 import javax.swing.JOptionPane;
-
+import java.sql.*;
 
 public class AdminRepository{
-    public AdminRepository(){};
+	private DatabaseConnection dbc;
+    public AdminRepository(){
+    	dbc=new DatabaseConnection();
+    };
     
-    public int getNumberofStudents(){
-        FileReader fr = null; 
-        BufferedReader br =  null;
-        int number=0;
-        try{
-            fr = new FileReader("repository/data/student.txt");
-            br = new BufferedReader(fr);
-            String line;
-            while ((line = br.readLine()) != null) {
-                number++;
+    public void addStudent(Student s) {
+        try {
+            dbc.openConnection();
+            Statement stmt = dbc.con.createStatement();
+            String query = "INSERT INTO student (S_NAME, S_PWD, S_EMAIL, S_PHN) VALUES "
+                         + "('" + s.getUsername() + "', '" + s.getPassword() + "', '" + s.getMail() + "', '" + s.getPhone() + "');";
+            stmt.executeUpdate(query);
+            Integer studentID = getGeneratedID(s);
+            if (studentID != -1) {
+            	String query1 = "INSERT INTO manager_student (S_ID, M_ID) VALUES (" + studentID + ", 111);";
+                stmt.executeUpdate(query1);
+                JOptionPane.showMessageDialog(null, "Student added successfully");
+            } else {
+                JOptionPane.showMessageDialog(null, "Error");
             }
+            stmt.close();
         } catch (Exception ex) {
-            ex.getMessage();
-        } finally{
-            try{
-                br.close();
-                fr.close();
-            }catch(Exception ex){
-                ex.getMessage();
-            }
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection();
         }
-        return number;
     }
-    public int getNumberofLibrarians(){
-        FileReader fr = null; 
-        BufferedReader br =  null;
-        int number=0;
-        try{
-            fr = new FileReader("repository/data/librarian.txt");
-            br = new BufferedReader(fr);
-            String line;
-            while ((line = br.readLine()) != null) {
-                number++;
+
+    
+    public void removeStudent(Student s) {
+        String checkQuery = "SELECT COUNT(*) FROM issue_table WHERE S_ID = " + s.getID() + ";";
+        String query1 = "DELETE FROM manager_student WHERE S_ID = " + s.getID() + ";";
+        String query2 = "DELETE FROM student WHERE S_ID = " + s.getID() + ";";
+
+        try {
+            dbc.openConnection();
+            ResultSet rs = dbc.st.executeQuery(checkQuery);
+            if (rs.next() && rs.getInt("COUNT(*)") == 0) {
+                dbc.st.executeUpdate(query1);
+                dbc.st.executeUpdate(query2);
+                JOptionPane.showMessageDialog(null, "Student removed successfully.");
+            } else {
+                JOptionPane.showMessageDialog(null, "Cannot remove student. There are issued books.");
             }
+
         } catch (Exception ex) {
-            ex.getMessage();
-        } finally{
-            try{
-                br.close();
-                fr.close();
-            }catch(Exception ex){
-                ex.getMessage();
-            }
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection();
         }
-        return number;
     }
-    public Student[] getStudents(){
-        FileReader fr = null; 
-        BufferedReader br =  null;
-        String[] data =new String[3];
-        Student[] students = new Student[getNumberofStudents()];
-        for(int i=0; i<getNumberofStudents(); i++){
-        try{
-            fr = new FileReader("repository\\data\\student.txt");
-            br = new BufferedReader(fr);
-            String line;
-            int counter=0;
-            while ((line = br.readLine()) != null) {
-                data = line.split("\t");
-                Student s1 = new Student(data[0],data[1],data[2]);
-                students[counter++]=s1;
+
+
+   
+    public void updateStudent(Student s) {
+        String query = "UPDATE student SET S_NAME = '" + s.getUsername() +
+                             "', S_PWD = '" + s.getPassword() +
+                             "', S_EMAIL = '" + s.getMail() +
+                             "', S_PHN = '" + s.getPhone() +
+                             "' WHERE S_ID = " + s.getID()+";" ;
+
+        try {
+            dbc.openConnection();
+            dbc.st.executeUpdate(query);
+            JOptionPane.showMessageDialog(null, "Student updated successfully.");
+
+        } catch (SQLException ex) {
+        	JOptionPane.showMessageDialog(null,ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection();
+        }
+    }
+    
+	
+	public int getNumberOfStudents() {
+        int count = 0;
+        String query = "SELECT COUNT(*) AS TOTAL FROM student";
+        try {
+            dbc.openConnection();
+            dbc.result = dbc.st.executeQuery(query);
+            if (dbc.result.next()) {
+                count = dbc.result.getInt("TOTAL");
             }
         } catch (Exception ex) {
-            ex.getMessage();
-        } finally{
-            try{
-                br.close();
-                fr.close();
-            }catch(Exception ex){
-                ex.getMessage();
-            }
+        	JOptionPane.showMessageDialog(null,ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection();
         }
+        return count;
+    }    
+	
+    public Student[] getStudents() {
+        int numberOfStudents = getNumberOfStudents();
+        Student[] students = new Student[numberOfStudents];
+        String query = "SELECT S.S_ID, S.S_NAME, S.S_PWD, S.S_EMAIL, S.S_PHN FROM student s, manager_student M "
+        		+ "WHERE M.S_ID = S.S_ID AND M.M_ID=111";
+        
+        try {
+        	dbc.openConnection();
+            dbc.result = dbc.st.executeQuery(query);
+            int index = 0;
+            while (dbc.result.next() && index < numberOfStudents) {
+                Integer id = dbc.result.getInt("S_ID");
+                String username = dbc.result.getString("S_NAME");
+                String password = dbc.result.getString("S_PWD");
+                String mail = dbc.result.getString("S_EMAIL");
+                String phone = dbc.result.getString("S_PHN");
+                students[index] = new Student(id, username, password, mail, phone);
+                index++;
+            }
+        } catch (Exception ex) {
+        	JOptionPane.showMessageDialog(null,ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection();
         }
         return students;
     }
-    public Librarian[] getLibrarians(){
-        FileReader fr = null; 
-        BufferedReader br =  null;
-        String[] data =new String[3];
-        Librarian[] librarians = new Librarian[getNumberofLibrarians()];
-        for(int i=0; i<getNumberofLibrarians(); i++){
-        try{
-            fr = new FileReader("repository\\data\\librarian.txt");
-            br = new BufferedReader(fr);
-            String line;
-            int counter=0;
-            while ((line = br.readLine()) != null) {
-                data = line.split("\t");
-                Librarian l1 = new Librarian(data[0],data[1],data[2]);
-                librarians[counter++]=l1;
+    
+    public Integer getGeneratedID(Student s) {
+        Integer generatedId = -1;
+        String query = "SELECT S_ID FROM student WHERE S_NAME='" + s.getUsername() + "';"; 
+        try {
+            dbc.openConnection();
+            dbc.result = dbc.st.executeQuery(query);
+            if (dbc.result.next()) { 
+                generatedId = dbc.result.getInt("S_ID");
             }
         } catch (Exception ex) {
-            ex.getMessage();
-        } finally{
-            try{
-                br.close();
-                fr.close();
-            }catch(Exception ex){
-                ex.getMessage();
+        	JOptionPane.showMessageDialog(null,ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection();
+        }
+
+        return generatedId;
+    }
+    
+    
+    public void addLibrarian(Librarian lb) {
+        try {
+            dbc.openConnection();
+            Statement stmt = dbc.con.createStatement();
+            String query = "INSERT INTO librarian (L_NAME, L_PWD, L_EMAIL, L_PHN) VALUES "
+                    + "('" + lb.getUsername() + "', '" + lb.getPassword() + "', '" + lb.getMail() + "', '" + lb.getPhone() + "');";
+            stmt.executeUpdate(query);
+            Integer librarianID = getGeneratedID(lb);
+            if (librarianID != -1) {
+            	String query1="INSERT INTO manager_librarian (L_ID, M_ID) VALUES (" + librarianID + ", 111);";
+                stmt.executeUpdate(query1);
+                JOptionPane.showMessageDialog(null, "Librarian added successfully");
+            } else {
+                JOptionPane.showMessageDialog(null, "Error");
             }
+            stmt.close();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection();
         }
+    }
+    
+    public void removeLibrarian(Librarian lb) {
+        String query = "DELETE FROM librarian WHERE L_ID = "+lb.getID()+";"; 
+        String query1 = "DELETE FROM manager_librarian WHERE l_ID ="+ lb.getID()+";";
+        try {
+        	   dbc.openConnection();
+        	   dbc.st.executeUpdate(query1);
+        	   dbc.st.executeUpdate(query);
+               JOptionPane.showMessageDialog(null, "Librarian removed successfully.");
+        } catch (Exception ex) {
+        	JOptionPane.showMessageDialog(null,ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection();
         }
+    }
+    
+    public void updateLibrarian(Librarian lb) {
+        String updateQuery = "UPDATE librarian SET L_NAME = '" + lb.getUsername() + 
+                             "', L_PWD = '" + lb.getPassword() + 
+                             "', L_EMAIL = '" + lb.getMail() + 
+                             "', L_PHN = '" + lb.getPhone() + 
+                             "' WHERE L_ID = " + lb.getID() + ";";
+        try {
+            dbc.openConnection();
+            dbc.st.executeUpdate(updateQuery);
+            JOptionPane.showMessageDialog(null,"Librarian updated successfully.");
+        } catch (Exception ex) {
+        	JOptionPane.showMessageDialog(null,ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection();
+        }
+    }
+    
+	public int getNumberOfLibrarians() {
+        int count = 0;
+        String query = "SELECT COUNT(*) AS TOTAL FROM librarian";
+        try {
+            dbc.openConnection();
+            dbc.result = dbc.st.executeQuery(query);
+            if (dbc.result.next()) {
+                count = dbc.result.getInt("TOTAL");
+            }
+        } catch (Exception ex) {
+        	JOptionPane.showMessageDialog(null,ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection();
+        }
+        return count;
+    }
+	
+    public Librarian[] getLibrarians() {
+        int numberOfLibrarians = getNumberOfLibrarians();
+        Librarian[] librarians = new Librarian[numberOfLibrarians];
+        String query = "SELECT M.L_ID, L.L_NAME, L.L_PWD, L.L_EMAIL, L.L_PHN FROM librarian L, manager_librarian M "
+        		+ "WHERE M.L_ID = L.L_ID AND M.M_ID=111";
         
+        try {
+        	dbc.openConnection();
+            dbc.result = dbc.st.executeQuery(query);
+            int index = 0;
+            while (dbc.result.next() && index < numberOfLibrarians) {
+                Integer id = dbc.result.getInt("L_ID");
+                String username = dbc.result.getString("L_NAME");
+                String password = dbc.result.getString("L_PWD");
+                String mail = dbc.result.getString("L_EMAIL");
+                String phone = dbc.result.getString("L_PHN");
+                librarians[index] = new Librarian(id, username, password, mail, phone);
+                index++;
+            }
+        } catch (Exception ex) {
+        	JOptionPane.showMessageDialog(null,ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection();
+        }
         return librarians;
-      
     }
-    public void addLibrarian(Librarian librarian)throws IOException{
-        FileWriter fw = null;
-        BufferedWriter bw = null;
-        try{
-            fw = new FileWriter("repository\\data\\librarian.txt",true);
-            bw = new BufferedWriter(fw);
-            bw.write(librarian.getUsername()+"\t"+librarian.getPassword()+"\t"+librarian.getMail()+"\n");
-            fw.flush();
-            bw.flush();
-            fw.close();
-            bw.close();
-        }catch(Exception ex){
-            JOptionPane.showMessageDialog(null, "Could not add librarian");
-        }
-    }
-    public void removeLibrarian(Librarian librarian) throws IOException {
-        File originalFile = new File("repository\\data\\librarian.txt");
-        File tempFile = new File("repository\\data\\temp_librarian.txt");
-
-        try{
-            BufferedReader br = new BufferedReader(new FileReader(originalFile));
-            BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split("\t");
-                if (parts[0].equals(librarian.getUsername())&& parts[1].equals(librarian.getPassword())&& parts[2].equals(librarian.getMail())) {
-                    continue; 
-                }
-                bw.write(line + "\n");
-            }
-            br.close();
-            bw.flush();
-            bw.close();
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(null, "Error while removing librarian: " + ex.getMessage());
-            return;
-        }
-        if (!originalFile.delete()) {
-            JOptionPane.showMessageDialog(null, "Error while removing librarian: Could not delete original file.");
-            return;
-        }
-        if (!tempFile.renameTo(originalFile)) {
-            JOptionPane.showMessageDialog(null, "Error while removing librarian: Could not rename temporary file.");
-        }
-    }
-    public void updateLibrarian(Librarian oldLibrarian, Librarian newLibrarian) throws IOException{
-        if(oldLibrarian==null || newLibrarian==null){
-            JOptionPane.showMessageDialog(null, "Librarian to (be) replace(d) is null");
-        }
-        File originalFile = new File("repository\\data\\librarian.txt");
-        File tempFile = new File("repository\\data\\temp_librarian.txt");
     
-        try{
-            BufferedReader br = new BufferedReader(new FileReader(originalFile));
-            BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));    
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split("\t");
-                if (parts[0].equals(oldLibrarian.getUsername()) && parts[1].equals(oldLibrarian.getPassword()) && parts[2].equals(oldLibrarian.getMail())) {
-                    bw.write(newLibrarian.getUsername() + "\t" + newLibrarian.getPassword() + "\t" + newLibrarian.getMail()+ "\n");
-                } else {
-                    bw.write(line + "\n");
-                }
-            }
-            br.close();
-            bw.flush();
-            bw.close();
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(null, "Error while updating Librarian: " + ex.getMessage());
-            return;
-        }
-            if (!originalFile.delete()) {
-            JOptionPane.showMessageDialog(null, "Error while updating Librarian: Could not delete original file.");
-            return;
-        }
-            if (!tempFile.renameTo(originalFile)) {
-            JOptionPane.showMessageDialog(null, "Error while updating Librarian: Could not rename temporary file.");
-        }
-    }
-    public void addStudent(Student student)throws IOException{
-        FileWriter fw = null;
-        BufferedWriter bw = null;
-        try{
-            fw = new FileWriter("repository\\data\\student.txt",true);
-            bw = new BufferedWriter(fw);
-            bw.write(student.getUsername()+"\t"+student.getPassword()+"\t"+student.getMail()+"\n");
-            fw.flush();
-            bw.flush();
-            fw.close();
-            bw.close();
-        }catch(Exception ex){
-            JOptionPane.showMessageDialog(null, "Could not add student");
-        }
-    }
-    public void removeStudent(Student student) throws IOException {
-        File originalFile = new File("repository\\data\\student.txt");
-        File tempFile = new File("repository\\data\\temp_student.txt");
+    public Integer getGeneratedID(Librarian lb) {
+        Integer generatedId = -1;
+        String query = "SELECT L_ID FROM librarian WHERE L_NAME='" + lb.getUsername() + "';";
 
-        try{
-            BufferedReader br = new BufferedReader(new FileReader(originalFile));
-            BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split("\t");
-                if (parts[0].equals(student.getUsername())&& parts[1].equals(student.getPassword())&& parts[2].equals(student.getMail())) {
-                    continue; 
-                }
-                bw.write(line + "\n");
+        try {
+            dbc.openConnection();
+            dbc.result = dbc.st.executeQuery(query); 
+
+            if (dbc.result.next()) { 
+                generatedId = dbc.result.getInt("L_ID");
             }
-            br.close();
-            bw.flush();
-            bw.close();
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(null, "Error while removing student: " + ex.getMessage());
-            return;
+        } catch (Exception ex) {
+        	JOptionPane.showMessageDialog(null,ex.getMessage());
+            ex.printStackTrace();
+        } finally {
+            dbc.closeConnection(); 
         }
-        if (!originalFile.delete()) {
-            JOptionPane.showMessageDialog(null, "Error while removing student: Could not delete original file.");
-            return;
-        }
-        if (!tempFile.renameTo(originalFile)) {
-            JOptionPane.showMessageDialog(null, "Error while removing student: Could not rename temporary file.");
-        }
+
+        return generatedId; 
     }
-    public void updateStudent(Student oldStudent, Student newStudent) throws IOException{
-        File originalFile = new File("repository\\data\\student.txt");
-        File tempFile = new File("repository\\data\\temp_student.txt");
-    
-        try{
-            BufferedReader br = new BufferedReader(new FileReader(originalFile));
-            BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile));    
-            String line;
-            while ((line = br.readLine()) != null) {
-                String[] parts = line.split("\t");
-                if (parts[0].equals(oldStudent.getUsername()) && parts[1].equals(oldStudent.getPassword()) && parts[2].equals(oldStudent.getMail())) {
-                    bw.write(newStudent.getUsername() + "\t" + newStudent.getPassword() + "\t" + newStudent.getMail()+ "\n");
-                } else {
-                    bw.write(line + "\n");
-                }
-            }
-            br.close();
-            bw.flush();
-            bw.close();
-        } catch (IOException ex) {
-            JOptionPane.showMessageDialog(null, "Error while updating student: " + ex.getMessage());
-            return;
-        }
-            if (!originalFile.delete()) {
-            JOptionPane.showMessageDialog(null, "Error while updating Student: Could not delete original file.");
-            return;
-        }
-            if (!tempFile.renameTo(originalFile)) {
-            JOptionPane.showMessageDialog(null, "Error while updating Student: Could not rename temporary file.");
-        }
-    }
-        
 }
