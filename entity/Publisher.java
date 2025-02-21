@@ -1,23 +1,25 @@
 package entity;
 
-public abstract class User {
+public class Publisher{
     private Integer id;
     private String username;
-    private String password;
     private String mail;
     private String phn;
-    public User(Integer id, String username, String password, String mail, String phn){
+    
+    public Publisher(Integer id, String username, String mail, String phn){
         this.id=id;
         this.username=username;
-        this.password=password;
+        this.mail=mail;
+        this.phn = phn;
+    }
+    public Publisher(String username, String mail, String phn){
+        this.id=null;
+        this.username=username;
         this.mail=mail;
         this.phn = phn;
     }
     public String getUsername(){
         return username;
-    }
-    public String getPassword(){
-        return password;
     }
     public String getMail(){
         return mail;
@@ -35,10 +37,6 @@ public abstract class User {
         this.username = username;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public void setMail(String mail) {
         this.mail = mail;
     }
@@ -46,7 +44,6 @@ public abstract class User {
     public void setPhone(String phn) {
         this.phn = phn;
     }
-    
-
 
 }
+
