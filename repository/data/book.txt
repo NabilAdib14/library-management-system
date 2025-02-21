@@ -1,5 +1,0 @@
-Book1	Author1	13	
-Book2	Author2	10	
-Book3	Author3	16	
-Book4	Author4	6	
-Book5	Author5	3
