@@ -32,7 +32,7 @@ This Java application simplifies library management tasks. It provides a user-fr
     * GUI Framework: Java Swing
     * Version Control: Git
 ## Installation and Setup
-    * Download the Project: [Download](https://drive.google.com/uc?export=1sN9sKLIZ-mHPZhBG6GrahdYiVFHImEdB)
+    * Download the Project: [Download](https://aiubedu60714-my.sharepoint.com/:f:/g/personal/23-53206-3_student_aiub_edu/Er85x5M-e1VIswPnudTMTF8BvOBcenmAanuEPEDiR5tbDA?e=eNhe93)
     * Set Up Oracle 10g Database: Install Oracle 10g and configure the database.
                                   Import the provided SQL scripts to set up the necessary tables.
     * Configure Database Connection: Update the database connection details in the DatabaseConnection.java file.
@@ -42,7 +42,7 @@ This Java application simplifies library management tasks. It provides a user-fr
 # Maintainer
 * **Md. Nabil Adibur Rahman - [NabilAdib14](https://github.com/NabilAdib14)**
 * Social Media - [Facebook](https://www.facebook.com/nabil.adib.1412)
-* Click to Download - [Download](https://drive.google.com/uc?export=1sN9sKLIZ-mHPZhBG6GrahdYiVFHImEdB)
+* Click to Download - [Download](https://aiubedu60714-my.sharepoint.com/:f:/g/personal/23-53206-3_student_aiub_edu/Er85x5M-e1VIswPnudTMTF8BvOBcenmAanuEPEDiR5tbDA?e=eNhe93)
 
 
 
